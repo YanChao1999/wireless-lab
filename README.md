@@ -32,3 +32,16 @@ mainline kernel, wireless tools) are in `external/configs/common.fragment`.
 
 Results are printed as `PASS`/`FAIL`/`SKIP`; attach `dmesg` output and the
 kernel version when reporting upstream.
+
+## Host-side control and AI reproducer
+
+Flashing and power are handled by the host (`host/`), not the target:
+
+- `host/power.sh on|off|cycle` drives the programmable power module.
+  Pick a backend with `POWER_BACKEND=cmd|uhubctl|http|manual`
+  (see the script header for the variables each one needs).
+- `host/flash.sh <image> <dev>` flashes (`ASSUME_YES=1` for unattended use).
+- `host/reproduce.sh <image> <dev> <serial-tty> [outdir]` flashes, power-cycles,
+  boots, runs `wl-test-all` over serial and saves `console.log` and
+  `results.txt`. It exits non-zero on any FAIL, so an AI agent can loop on it
+  to reproduce and bisect wireless issues.

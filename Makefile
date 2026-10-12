@@ -25,7 +25,7 @@ build: $(OUT)/.config
 
 flash:
 	@test -n "$(DEV)" || { echo "usage: make flash DEV=/dev/sdX"; exit 1; }
-	scripts/flash.sh $(OUT)/images/sdcard.img $(DEV)
+	host/flash.sh $(OUT)/images/sdcard.img $(DEV)
 
 check:
 	sh tests/lint.sh
