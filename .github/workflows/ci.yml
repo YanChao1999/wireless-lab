@@ -26,7 +26,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: image-${{ matrix.board }}
-          path: output/${{ matrix.board }}/images/
+          path: |
+            output/${{ matrix.board }}/images/
+            output/${{ matrix.board }}/manifest.txt
 
   board-test:
     # Runs on a self-hosted runner attached to the real board

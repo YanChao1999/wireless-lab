@@ -50,10 +50,12 @@ Flashing and power are handled by the host (`host/`), not the target:
 
 The kernel is built from Linus's `master` and the wifi/ble userspace
 (`iw`, `hostap`/wpa_supplicant, `bluez`, `wireless-regdb`, `linux-firmware`)
-from upstream git HEAD (`external/local.mk`). Wireless/BT/PM kernel options
-are in `external/board/common/linux-wireless.fragment`. Pin any component for
-a reproducible report, e.g. `make KERNEL_REF=v6.12 WL_BLUEZ_REF=<sha> build`
-(`WL_IW_REF`, `WL_HOSTAP_REF`, `WL_REGDB_REF`, `WL_FW_REF`).
+from upstream git master/main (`external/local.mk`). Nothing is pinned.
+Every build writes the upstream commit IDs it used to
+`output/<board>/manifest.txt` (also uploaded by CI, together with the
+wireless-lab commit). When the board tests pass, `make BOARD=<b> mark-stable`
+copies it to `stable/<b>.txt`: the last known-good set of commits for that
+board, to compare against when something regresses.
 
 ## CI
 

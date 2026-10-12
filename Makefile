@@ -1,7 +1,5 @@
 BOARD ?= sk-am64b
 BR_VERSION ?= 2024.08
-# Pin refs for reproducible runs: KERNEL_REF=v7.0-rc3 WL_BLUEZ_REF=<sha> ...
-KERNEL_REF ?= master
 BR_DIR ?= $(CURDIR)/buildroot
 OUT ?= $(CURDIR)/output/$(BOARD)
 EXT := $(CURDIR)/external
@@ -10,9 +8,7 @@ base-sk-am64b := ti_am64x_sk_defconfig
 base-imx8mp := freescale_imx8mpevk_defconfig
 BASE := $(base-$(BOARD))
 
-export WL_IW_REF WL_HOSTAP_REF WL_BLUEZ_REF WL_REGDB_REF WL_FW_REF
-
-.PHONY: build flash clean check
+.PHONY: build flash clean check mark-stable
 
 $(BR_DIR):
 	git clone --depth 1 --branch $(BR_VERSION) https://gitlab.com/buildroot.org/buildroot.git $@
@@ -22,11 +18,15 @@ $(OUT)/.config: $(BR_DIR) $(EXT)/configs/common.fragment $(EXT)/configs/$(BOARD)
 	$(MAKE) -C $(BR_DIR) O=$(OUT) BR2_EXTERNAL=$(EXT) $(BASE)
 	$(BR_DIR)/support/kconfig/merge_config.sh -m -O $(OUT) $(OUT)/.config \
 		$(EXT)/configs/common.fragment $(EXT)/configs/$(BOARD).fragment
-	echo 'BR2_LINUX_KERNEL_CUSTOM_REPO_VERSION="$(KERNEL_REF)"' >> $(OUT)/.config
 	$(MAKE) -C $(BR_DIR) O=$(OUT) BR2_EXTERNAL=$(EXT) olddefconfig
 
 build: $(OUT)/.config
+	host/record-commits.sh $(OUT)/manifest.txt
 	$(MAKE) -C $(BR_DIR) O=$(OUT) BR2_EXTERNAL=$(EXT)
+
+# Call after the board tests passed: records the tested commits as stable.
+mark-stable:
+	cp $(OUT)/manifest.txt stable/$(BOARD).txt
 
 flash:
 	@test -n "$(DEV)" || { echo "usage: make flash DEV=/dev/sdX"; exit 1; }
