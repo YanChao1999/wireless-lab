@@ -1,5 +1,8 @@
 #!/bin/sh
-IF=$(ls /sys/class/ieee80211/*/device/net 2>/dev/null | head -n1)
+IF=
+for p in /sys/class/ieee80211/*/device/net/*; do
+    [ -e "$p" ] && IF=${p##*/} && break
+done
 [ -n "$IF" ] || { echo "SKIP wifi: no wlan device"; exit 0; }
 echo "PASS wifi: interface $IF"
 rc=0

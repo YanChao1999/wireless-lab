@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck
       - run: make check
+      # CI=true (set by GitHub) makes a missing shellcheck a failure
 
   build:
     # Cloud build of the image; one job per board.
@@ -45,7 +47,7 @@ jobs:
     runs-on: [self-hosted, wireless-lab, "${{ matrix.board }}"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4.3.0
         with:
           name: image-${{ matrix.board }}
           path: image

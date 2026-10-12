@@ -59,7 +59,7 @@ board, to compare against when something regresses.
 
 ## CI
 
-`.github/workflows/ci.yml`: `lint` (`make check`) and a per-board image `build`
+`.github/workflows/ci.yml`: `lint` (`make check`: `sh -n` plus shellcheck on all scripts) and a per-board image `build`
 run on GitHub-hosted runners. The `board-test` job runs `host/reproduce.sh` on a
 self-hosted runner wired to the real board. To enable it: register a runner with
 labels `self-hosted,wireless-lab,<board>`, export `FLASH_DEV`, `SERIAL_TTY` and

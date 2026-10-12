@@ -5,9 +5,10 @@ for d in /sys/devices/platform/*/power/runtime_status; do
     [ -f "$d" ] || continue
     n=$((n+1))
 done
-[ "$n" -gt 0 ] && echo "PASS power: $n devices expose runtime PM" || { echo "FAIL power: no runtime PM"; rc=1; }
+if [ "$n" -gt 0 ]; then echo "PASS power: $n devices expose runtime PM"
+else echo "FAIL power: no runtime PM"; rc=1; fi
 if [ -d /sys/kernel/debug/pm_genpd ] || mount -t debugfs none /sys/kernel/debug 2>/dev/null; then
-    cat /sys/kernel/debug/pm_genpd/pm_genpd_summary 2>/dev/null | head -n 40
+    head -n 40 /sys/kernel/debug/pm_genpd/pm_genpd_summary 2>/dev/null
     echo "PASS power: genpd summary dumped"
 else echo "SKIP power: debugfs unavailable"; fi
 exit $rc
