@@ -54,3 +54,12 @@ from upstream git HEAD (`external/local.mk`). Wireless/BT/PM kernel options
 are in `external/board/common/linux-wireless.fragment`. Pin any component for
 a reproducible report, e.g. `make KERNEL_REF=v6.12 WL_BLUEZ_REF=<sha> build`
 (`WL_IW_REF`, `WL_HOSTAP_REF`, `WL_REGDB_REF`, `WL_FW_REF`).
+
+## CI
+
+`.github/workflows/ci.yml`: `lint` (`make check`) and a per-board image `build`
+run on GitHub-hosted runners. The `board-test` job runs `host/reproduce.sh` on a
+self-hosted runner wired to the real board. To enable it: register a runner with
+labels `self-hosted,wireless-lab,<board>`, export `FLASH_DEV`, `SERIAL_TTY` and
+the `POWER_*` variables in the runner environment, then set the repository
+variable `BOARD_CI_ENABLED=true`.

@@ -1,0 +1,56 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make check
+
+  build:
+    # Cloud build of the image; one job per board.
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [sk-am64b, imx8mp]
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bc cpio rsync unzip file wget
+      - run: make BOARD=${{ matrix.board }} build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ matrix.board }}
+          path: output/${{ matrix.board }}/images/
+
+  board-test:
+    # Runs on a self-hosted runner attached to the real board
+    # (register it with labels: self-hosted, wireless-lab, <board>).
+    # Runner env/secrets provide: FLASH_DEV, SERIAL_TTY, POWER_BACKEND and
+    # its variables (see host/power.sh). Disabled until the runner exists:
+    # set repository variable BOARD_CI_ENABLED=true.
+    if: vars.BOARD_CI_ENABLED == 'true'
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [sk-am64b, imx8mp]
+    runs-on: [self-hosted, wireless-lab, "${{ matrix.board }}"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: image-${{ matrix.board }}
+          path: image
+      - name: Flash, boot and run tests on board
+        run: host/reproduce.sh image/sdcard.img "$FLASH_DEV" "$SERIAL_TTY" logs/${{ matrix.board }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-${{ matrix.board }}
+          path: logs/
