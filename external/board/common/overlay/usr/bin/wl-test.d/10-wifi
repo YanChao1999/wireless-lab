@@ -1,0 +1,12 @@
+#!/bin/sh
+IF=$(ls /sys/class/ieee80211/*/device/net 2>/dev/null | head -n1)
+[ -n "$IF" ] || { echo "SKIP wifi: no wlan device"; exit 0; }
+echo "PASS wifi: interface $IF"
+rc=0
+ip link set "$IF" up || { echo "FAIL wifi: link up"; rc=1; }
+if iw dev "$IF" scan 2>/dev/null | grep -q '^BSS'; then echo "PASS wifi: scan"
+else echo "FAIL wifi: scan found no BSS"; rc=1; fi
+if dmesg | grep -iE "$IF|ieee80211|cfg80211" | grep -iE 'error|fail|timeout|warn'; then
+    echo "FAIL wifi: driver errors in dmesg"; rc=1
+else echo "PASS wifi: dmesg clean"; fi
+exit $rc

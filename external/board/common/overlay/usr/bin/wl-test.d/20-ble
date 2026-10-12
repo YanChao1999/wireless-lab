@@ -1,0 +1,9 @@
+#!/bin/sh
+command -v hciconfig >/dev/null 2>&1 || command -v bluetoothctl >/dev/null 2>&1 || { echo "SKIP ble: no bluez"; exit 0; }
+[ -d /sys/class/bluetooth ] && ls /sys/class/bluetooth | grep -q '^hci' || { echo "SKIP ble: no HCI controller"; exit 0; }
+echo "PASS ble: HCI controller present"
+hciconfig hci0 up 2>/dev/null
+if hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'; then echo "PASS ble: hci0 up"
+else echo "FAIL ble: hci0 not up"; exit 1; fi
+if timeout 10 hcitool lescan >/dev/null 2>&1 || [ $? -eq 124 ]; then echo "PASS ble: LE scan"
+else echo "FAIL ble: LE scan"; exit 1; fi
