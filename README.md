@@ -45,3 +45,12 @@ Flashing and power are handled by the host (`host/`), not the target:
   boots, runs `wl-test-all` over serial and saves `console.log` and
   `results.txt`. It exits non-zero on any FAIL, so an AI agent can loop on it
   to reproduce and bisect wireless issues.
+
+## Latest mainline stack
+
+The kernel is built from Linus's `master` and the wifi/ble userspace
+(`iw`, `hostap`/wpa_supplicant, `bluez`, `wireless-regdb`, `linux-firmware`)
+from upstream git HEAD (`external/local.mk`). Wireless/BT/PM kernel options
+are in `external/board/common/linux-wireless.fragment`. Pin any component for
+a reproducible report, e.g. `make KERNEL_REF=v6.12 WL_BLUEZ_REF=<sha> build`
+(`WL_IW_REF`, `WL_HOSTAP_REF`, `WL_REGDB_REF`, `WL_FW_REF`).
