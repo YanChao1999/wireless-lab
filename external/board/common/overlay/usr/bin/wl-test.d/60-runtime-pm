@@ -1,0 +1,33 @@
+#!/bin/sh
+# shellcheck source=../../lib/wl-test/lib.sh
+. /usr/lib/wl-test/lib.sh
+WL_NAME=runtime-pm
+IF=$(wl_wifi_if) || { skip "no wlan device"; exit 0; }
+DEV=/sys/class/net/$IF/device/power
+[ -w "$DEV/control" ] || { skip "no runtime PM control for $IF"; exit 0; }
+wl_dmesg_mark
+orig=$(cat "$DEV/control")
+
+i=0
+while [ "$i" -lt "$WL_CYCLES" ]; do
+    i=$((i + 1))
+    echo on > "$DEV/control"
+    ip link set "$IF" up
+    sleep 1
+    echo auto > "$DEV/control"
+    ip link set "$IF" down
+    sleep 2
+    ip link set "$IF" up
+    timeout 30 iw dev "$IF" scan >/dev/null 2>&1 || { fail "scan failed after runtime PM transition $i"; break; }
+done
+[ "$WL_RC" = 0 ] && pass "$i runtime PM transitions ($(cat "$DEV/runtime_status" 2>/dev/null))"
+echo "$orig" > "$DEV/control"
+
+if HCI=$(wl_hci) && [ -w "/sys/class/bluetooth/$HCI/device/power/control" ]; then
+    hciconfig "$HCI" up
+    echo auto > "/sys/class/bluetooth/$HCI/device/power/control"
+    sleep 2
+    hciconfig "$HCI" 2>/dev/null | grep -q UP && pass "hci still up under runtime PM" || fail "hci lost under runtime PM"
+fi
+wl_dmesg_check
+exit "$WL_RC"

@@ -1,0 +1,5 @@
+source-path=SCRIPTDIR
+external-sources=true
+# WL_* variables are consumed by the sourced test library; A && B || C is used
+# deliberately where C only reports failure.
+disable=SC2034,SC2015

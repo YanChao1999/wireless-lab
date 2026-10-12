@@ -24,14 +24,34 @@ mainline kernel, wireless tools) are in `external/configs/common.fragment`.
 
 ## Tests (run on target)
 
-`/usr/bin/wl-test-all` runs everything in `/usr/bin/wl-test.d`:
+A tiny shell suite: `/usr/lib/wl-test/lib.sh` gives every test the same
+`PASS`/`FAIL`/`SKIP` output, config loading, a dmesg splat check and a slab/
+kmemleak leak check. `/usr/bin/wl-test-all` runs `/usr/bin/wl-test.d/*` in order
+and exits non-zero on any FAIL. The library itself is unit-tested on the host
+(`tests/test-lib.sh`, part of `make check`).
 
-- `10-wifi`  : wlan interface present, scan works, dmesg free of driver errors
-- `20-ble`   : HCI controller present and powered, LE scan works
-- `30-power` : runtime-PM / power-domain state and suspend sanity
+| Test | What it does |
+|------|--------------|
+| `10-wifi` / `20-ble` / `30-power` | presence, scan, runtime-PM and genpd sanity |
+| `40-wifi-cycle` | link down/up + scan, connect/disconnect, driver reload, leaks |
+| `50-ble-cycle` | hci down/up, LE scan soak, LE connection soak, leaks |
+| `60-runtime-pm` | wifi/BLE runtime-PM transitions |
+| `65-suspend` | suspend/resume (rtcwake) with wifi and BLE active |
+| `70-throughput` | iperf3 tx/rx against the fixed AP, with a floor |
+| `90-dmesg` | fails the run on any WARN/BUG/Oops/KASAN/lockdep/kmemleak/hung task |
 
-Results are printed as `PASS`/`FAIL`/`SKIP`; attach `dmesg` output and the
-kernel version when reporting upstream.
+Each test also fails on kernel splats logged during its own run.
+
+**Fixed targets**: set the dedicated AP, iperf3 server and BLE peripheral in
+`/etc/wl-test.conf` (`external/board/common/overlay/etc/wl-test.conf`, all
+options documented there). Tests needing a target skip when it is unset.
+
+**Debug kernel**: `make DEBUG=1 BOARD=<b> build` adds
+`external/board/common/linux-debug.fragment` (KASAN, KFENCE, lockdep, kmemleak,
+hung-task detection) and builds into `output/<b>-debug`. Run the tests on both
+the normal and the debug kernel.
+
+Attach `dmesg` output and the build `manifest.txt` when reporting upstream.
 
 ## Host-side control and AI reproducer
 
