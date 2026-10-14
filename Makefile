@@ -1,4 +1,4 @@
-BOARD ?= sk-am64b
+BOARD ?= imx8mp
 BR_VERSION ?= 2024.08
 BR_DIR ?= $(CURDIR)/buildroot
 # DEBUG=1 builds the debug kernel variant (KASAN, lockdep, KFENCE, kmemleak)

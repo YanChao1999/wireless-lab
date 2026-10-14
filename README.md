@@ -9,16 +9,16 @@ report them upstream.
 
 | Board        | Buildroot base defconfig       | Status  |
 |--------------|--------------------------------|---------|
-| TI SK-AM64B  | `ti_am64x_sk_defconfig`        | first   |
-| NXP i.MX8MP  | `freescale_imx8mpevk_defconfig`| second  |
+| NXP i.MX8MP  | `freescale_imx8mpevk_defconfig`| first (default) |
+| TI SK-AM64B  | `ti_am64x_sk_defconfig`        | second  |
 
 ## Build / flash
 
-    make BOARD=sk-am64b build      # fetches Buildroot, builds image
-    make BOARD=sk-am64b flash DEV=/dev/sdX
-    make BOARD=imx8mp   build
+    make build                     # i.MX8MP (default); fetches Buildroot, builds image
+    make flash DEV=/dev/sdX
+    make BOARD=sk-am64b build
 
-`BOARD` is `sk-am64b` or `imx8mp`. Board fragments live in
+`BOARD` is `imx8mp` (default) or `sk-am64b`. Board fragments live in
 `external/configs/<board>.fragment`; common settings (BusyBox, initramfs,
 mainline kernel, wireless tools) are in `external/configs/common.fragment`.
 

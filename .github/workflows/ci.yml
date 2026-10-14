@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [sk-am64b, imx8mp]
+        board: [imx8mp, sk-am64b]
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bc cpio rsync unzip file wget
@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [sk-am64b, imx8mp]
+        board: [imx8mp, sk-am64b]
     runs-on: [self-hosted, wireless-lab, "${{ matrix.board }}"]
     steps:
       - uses: actions/checkout@v4
