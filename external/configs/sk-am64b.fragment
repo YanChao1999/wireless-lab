@@ -1,0 +1,2 @@
+# TI SK-AM64B (AM642) with wireless module on M.2/expansion
+BR2_PACKAGE_LINUX_FIRMWARE_TI_WL18XX=y

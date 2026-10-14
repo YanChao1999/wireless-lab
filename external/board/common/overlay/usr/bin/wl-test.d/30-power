@@ -1,0 +1,14 @@
+#!/bin/sh
+rc=0
+n=0
+for d in /sys/devices/platform/*/power/runtime_status; do
+    [ -f "$d" ] || continue
+    n=$((n+1))
+done
+if [ "$n" -gt 0 ]; then echo "PASS power: $n devices expose runtime PM"
+else echo "FAIL power: no runtime PM"; rc=1; fi
+if [ -d /sys/kernel/debug/pm_genpd ] || mount -t debugfs none /sys/kernel/debug 2>/dev/null; then
+    head -n 40 /sys/kernel/debug/pm_genpd/pm_genpd_summary 2>/dev/null
+    echo "PASS power: genpd summary dumped"
+else echo "SKIP power: debugfs unavailable"; fi
+exit $rc

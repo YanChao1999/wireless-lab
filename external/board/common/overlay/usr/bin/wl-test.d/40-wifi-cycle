@@ -1,0 +1,47 @@
+#!/bin/sh
+# shellcheck source=../../lib/wl-test/lib.sh
+. /usr/lib/wl-test/lib.sh
+WL_NAME=wifi-cycle
+IF=$(wl_wifi_if) || { skip "no wlan device"; exit 0; }
+wl_dmesg_mark
+slab=$(wl_slab_kb)
+
+i=0
+while [ "$i" -lt "$WL_CYCLES" ]; do
+    i=$((i + 1))
+    ip link set "$IF" down && ip link set "$IF" up || { fail "link down/up cycle $i"; break; }
+    timeout 30 iw dev "$IF" scan >/dev/null 2>&1 || { fail "scan failed in cycle $i"; break; }
+done
+[ "$WL_RC" = 0 ] && pass "$i link/scan cycles"
+
+if [ -n "${WL_SSID:-}" ]; then
+    i=0
+    while [ "$i" -lt "$WL_CYCLES" ]; do
+        i=$((i + 1))
+        wl_wifi_connect "$IF" || { fail "connect failed in cycle $i"; wl_wifi_disconnect; break; }
+        wl_wifi_disconnect
+    done
+    [ "$WL_RC" = 0 ] && pass "$i connect/disconnect cycles"
+else
+    skip "WL_SSID unset, no connect cycles"
+fi
+
+if [ -n "${WL_WIFI_MODULE:-}" ]; then
+    i=0
+    while [ "$i" -lt "$WL_CYCLES" ]; do
+        i=$((i + 1))
+        modprobe -r "$WL_WIFI_MODULE" && modprobe "$WL_WIFI_MODULE" || { fail "module reload cycle $i"; break; }
+        t=0
+        until wl_wifi_if >/dev/null; do
+            t=$((t + 1)); [ "$t" -le 15 ] || break; sleep 1
+        done
+        wl_wifi_if >/dev/null || { fail "interface did not return after reload $i"; break; }
+    done
+    [ "$WL_RC" = 0 ] && pass "$i module reloads"
+else
+    skip "WL_WIFI_MODULE unset, no driver reload"
+fi
+
+wl_leak_check "$slab"
+wl_dmesg_check
+exit "$WL_RC"

@@ -1,0 +1,24 @@
+#!/bin/sh
+# shellcheck source=../../lib/wl-test/lib.sh
+. /usr/lib/wl-test/lib.sh
+WL_NAME=throughput
+IF=$(wl_wifi_if) || { skip "no wlan device"; exit 0; }
+[ -n "${WL_SSID:-}" ] && [ -n "${WL_IPERF_SERVER:-}" ] || { skip "WL_SSID/WL_IPERF_SERVER unset"; exit 0; }
+command -v iperf3 >/dev/null 2>&1 || { skip "no iperf3"; exit 0; }
+wl_dmesg_mark
+ip link set "$IF" up
+wl_wifi_connect "$IF" || { fail "could not connect to $WL_SSID"; exit 1; }
+udhcpc -i "$IF" -q -n >/dev/null 2>&1 || fail "no DHCP lease"
+
+for dir in "" "-R"; do
+    if [ -z "$dir" ]; then label=tx; else label=rx; fi
+    # shellcheck disable=SC2086
+    out=$(iperf3 -c "$WL_IPERF_SERVER" -t "$WL_IPERF_SECS" $dir 2>&1)
+    mbps=$(echo "$out" | wl_iperf_mbps | tail -n 1)
+    if [ -z "$mbps" ]; then fail "$label: iperf3 failed"; echo "$out" | tail -n 5
+    elif awk -v a="$mbps" -v b="$WL_MIN_MBPS" 'BEGIN {exit !(a >= b)}'; then pass "$label ${mbps} Mbit/s (min $WL_MIN_MBPS)"
+    else fail "$label ${mbps} Mbit/s below $WL_MIN_MBPS"; fi
+done
+wl_wifi_disconnect
+wl_dmesg_check
+exit "$WL_RC"

@@ -1,0 +1,41 @@
+#!/bin/sh
+# shellcheck source=../../lib/wl-test/lib.sh
+. /usr/lib/wl-test/lib.sh
+WL_NAME=ble-cycle
+command -v hciconfig >/dev/null 2>&1 || { skip "no bluez tools"; exit 0; }
+HCI=$(wl_hci) || { skip "no HCI controller"; exit 0; }
+wl_dmesg_mark
+slab=$(wl_slab_kb)
+
+i=0
+while [ "$i" -lt "$WL_CYCLES" ]; do
+    i=$((i + 1))
+    hciconfig "$HCI" down && hciconfig "$HCI" up || { fail "hci down/up cycle $i"; break; }
+done
+[ "$WL_RC" = 0 ] && pass "$i hci down/up cycles"
+
+hciconfig "$HCI" up
+timeout -s INT "$WL_SOAK_SECS" hcitool -i "$HCI" lescan >/tmp/wl-lescan.txt 2>&1
+rc=$?
+if [ "$rc" = 0 ] || [ "$rc" = 124 ] || [ "$rc" = 130 ] || [ "$rc" = 143 ]; then
+    pass "LE scan soak ${WL_SOAK_SECS}s ($(grep -c ':' /tmp/wl-lescan.txt) adv lines)"
+else
+    fail "LE scan soak exited $rc"
+fi
+
+if [ -n "${WL_BLE_ADDR:-}" ]; then
+    if hcitool -i "$HCI" lecc "$WL_BLE_ADDR" >/dev/null 2>&1; then
+        sleep "$WL_SOAK_SECS"
+        if hcitool -i "$HCI" con | grep -qi "$WL_BLE_ADDR"; then pass "LE connection held ${WL_SOAK_SECS}s"
+        else fail "LE connection dropped during soak"; fi
+        hcitool -i "$HCI" ledc "$(hcitool -i "$HCI" con | awk -v a="$WL_BLE_ADDR" 'toupper($0) ~ toupper(a) {print $5}')" >/dev/null 2>&1
+    else
+        fail "LE connect to $WL_BLE_ADDR failed"
+    fi
+else
+    skip "WL_BLE_ADDR unset, no connection soak"
+fi
+
+wl_leak_check "$slab"
+wl_dmesg_check
+exit "$WL_RC"

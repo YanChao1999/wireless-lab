@@ -1,0 +1,33 @@
+#!/bin/sh
+# shellcheck source=../../lib/wl-test/lib.sh
+. /usr/lib/wl-test/lib.sh
+WL_NAME=suspend
+command -v rtcwake >/dev/null 2>&1 || { skip "no rtcwake"; exit 0; }
+[ -e /sys/power/state ] || { skip "no suspend support"; exit 0; }
+IF=$(wl_wifi_if) || IF=
+HCI=$(wl_hci) || HCI=
+[ -n "$IF$HCI" ] || { skip "no wifi or ble device"; exit 0; }
+wl_dmesg_mark
+
+i=0
+while [ "$i" -lt "$WL_SUSPEND_CYCLES" ]; do
+    i=$((i + 1))
+    if [ -n "$IF" ]; then
+        ip link set "$IF" up
+        wl_wifi_connect "$IF" >/dev/null 2>&1
+    fi
+    [ -z "$HCI" ] || hciconfig "$HCI" up
+    rtcwake -m "$WL_SUSPEND_MODE" -s 10 >/dev/null 2>&1 || { fail "suspend cycle $i failed"; break; }
+    sleep 3
+    if [ -n "$IF" ]; then
+        [ -e "/sys/class/net/$IF" ] || { fail "wifi gone after resume $i"; break; }
+        timeout 30 iw dev "$IF" scan >/dev/null 2>&1 || { fail "wifi scan failed after resume $i"; break; }
+        wl_wifi_disconnect
+    fi
+    if [ -n "$HCI" ]; then
+        hciconfig "$HCI" 2>/dev/null | grep -q UP || { fail "hci not up after resume $i"; break; }
+    fi
+done
+[ "$WL_RC" = 0 ] && pass "$i suspend/resume cycles (${WL_SUSPEND_MODE})"
+wl_dmesg_check
+exit "$WL_RC"

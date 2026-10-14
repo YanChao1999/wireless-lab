@@ -1,0 +1,6 @@
+# NXP i.MX8M Plus EVK (primary board), module: NXP IW612 (Wi-Fi 6 + BT 5.4, 802.15.4)
+# BT: mainline btnxpuart (see linux-wireless.fragment) over UART.
+# Wi-Fi: there is no mainline IW612 driver (NXP ships out-of-tree mlan/moal), so
+# that radio can't be tested on a pure mainline kernel yet.
+# Firmware: the IW612 files must come from NXP's firmware (nxp/ dir of
+# linux-firmware, or NXP's imx-firmware); check which package your Buildroot has.

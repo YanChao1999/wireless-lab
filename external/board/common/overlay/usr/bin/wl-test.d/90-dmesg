@@ -1,0 +1,8 @@
+#!/bin/sh
+# shellcheck source=../../lib/wl-test/lib.sh
+. /usr/lib/wl-test/lib.sh
+WL_NAME=dmesg-all
+# Whole boot + run: any WARN/BUG/Oops/KASAN/lockdep splat fails the run.
+WL_MARK=0
+wl_dmesg_check
+exit "$WL_RC"

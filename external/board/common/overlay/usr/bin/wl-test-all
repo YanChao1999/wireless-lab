@@ -1,0 +1,9 @@
+#!/bin/sh
+# Run all wireless-lab tests; exit non-zero if any FAIL.
+echo "kernel: $(uname -r)"
+rc=0
+for t in /usr/bin/wl-test.d/*; do
+    [ -x "$t" ] || continue
+    "$t" || rc=1
+done
+exit $rc
