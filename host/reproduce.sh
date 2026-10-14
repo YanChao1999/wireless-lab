@@ -1,7 +1,7 @@
 #!/bin/sh
 # Reproducer driver (for humans or an AI agent): flash, power-cycle, boot,
 # run the on-target tests over the serial console, and collect logs.
-# Usage: reproduce.sh <image> <block-device> <serial-tty> [outdir]
+# Usage: reproduce.sh <image> <block-device|-> <serial-tty> [outdir]  (use - with FLASH_METHOD=uuu)
 # Env: POWER_BACKEND etc. (see power.sh), BOOT_WAIT (s, default 60), BAUD (115200), TEST_TIMEOUT (s, 3600)
 set -eu
 here=$(dirname "$0")

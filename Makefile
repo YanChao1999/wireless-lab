@@ -32,8 +32,8 @@ mark-stable:
 	cp $(OUT)/manifest.txt stable/$(BOARD)$(if $(DEBUG),-debug).txt
 
 flash:
-	@test -n "$(DEV)" || { echo "usage: make flash DEV=/dev/sdX"; exit 1; }
-	host/flash.sh $(OUT)/images/sdcard.img $(DEV)
+	@test -n "$(DEV)" || test "$(FLASH_METHOD)" = uuu || { echo "usage: make flash DEV=/dev/sdX"; exit 1; }
+	FLASH_METHOD=$(FLASH_METHOD) host/flash.sh $(OUT)/images/sdcard.img $(DEV)
 
 check:
 	sh tests/lint.sh

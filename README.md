@@ -16,7 +16,12 @@ report them upstream.
 
     make build                     # i.MX8MP (default); fetches Buildroot, builds image
     make flash DEV=/dev/sdX
+    make FLASH_METHOD=uuu flash   # i.MX8MP over USB (uuu), no SD card
     make BOARD=sk-am64b build
+
+i.MX8MP uses the NXP IW612 module. Bluetooth works with the mainline
+`btnxpuart` driver; Wi-Fi has no mainline driver (NXP out-of-tree only), so on a
+pure mainline kernel only the BLE tests apply and the Wi-Fi tests skip.
 
 `BOARD` is `imx8mp` (default) or `sk-am64b`. Board fragments live in
 `external/configs/<board>.fragment`; common settings (BusyBox, initramfs,
@@ -85,3 +90,13 @@ self-hosted runner wired to the real board. To enable it: register a runner with
 labels `self-hosted,wireless-lab,<board>`, export `FLASH_DEV`, `SERIAL_TTY` and
 the `POWER_*` variables in the runner environment, then set the repository
 variable `BOARD_CI_ENABLED=true`.
+
+### Flashing i.MX8MP with uuu
+
+`FLASH_METHOD=uuu` (`host/flash-uuu.sh`) runs `uuu -b emmc_all imx-boot sdcard.img`
+(`UUU_TARGET=sd_all` for the SD slot, `UUU_BOOTLOADER` to point at the
+bootloader). The board must be in serial download mode with USB connected.
+After flashing, it must boot normally (eMMC/SD boot mode) before
+`host/reproduce.sh` power-cycles it, so switching boot mode has to be
+automated (e.g. a relay or boot-mode GPIO on the power module) or done by hand.
+Buildroot's i.MX8MP image must also provide the `imx-boot` file for this.
